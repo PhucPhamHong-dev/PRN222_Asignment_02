@@ -1,0 +1,45 @@
+@page
+@model PhamHongPhucRazorPages.Pages.Admin.Reports.IndexModel
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">Report Statistics</h1>
+        <p class="text-muted mb-0">News articles from start date to end date, sorted descending by created date.</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card stat-card"><div class="card-body"><div class="text-muted">Articles</div><div class="h3">@Model.Articles.Count</div></div></div></div>
+    <div class="col-md-4"><div class="card stat-card"><div class="card-body"><div class="text-muted">Active</div><div class="h3">@Model.Articles.Count(a => a.NewsStatus)</div></div></div></div>
+    <div class="col-md-4"><div class="card stat-card"><div class="card-body"><div class="text-muted">Inactive</div><div class="h3">@Model.Articles.Count(a => !a.NewsStatus)</div></div></div></div>
+</div>
+
+<div class="card soft-card">
+    <div class="card-body">
+        <form class="row g-2 mb-3" method="get">
+            <div class="col-md-5"><input class="form-control" asp-for="StartDate" type="date" /></div>
+            <div class="col-md-5"><input class="form-control" asp-for="EndDate" type="date" /></div>
+            <div class="col-md-2"><button class="btn btn-primary w-100"><i class="bi bi-funnel"></i> Filter</button></div>
+        </form>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Title</th><th>Category</th><th>Author</th><th>Status</th><th>Created</th></tr></thead>
+                <tbody>
+                @foreach (var article in Model.Articles)
+                {
+                    <tr>
+                        <td>@article.NewsTitle</td>
+                        <td>@article.Category?.CategoryName</td>
+                        <td>@article.CreatedBy?.AccountName</td>
+                        <td><span class="badge @(article.NewsStatus ? "text-bg-success" : "text-bg-secondary")">@(article.NewsStatus ? "Active" : "Inactive")</span></td>
+                        <td>@article.CreatedDate.ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
