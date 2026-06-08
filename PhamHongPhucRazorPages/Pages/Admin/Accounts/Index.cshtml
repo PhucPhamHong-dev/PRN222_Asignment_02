@@ -1,0 +1,105 @@
+@page
+@model PhamHongPhucRazorPages.Pages.Admin.Accounts.IndexModel
+@{
+    ViewData["Title"] = "Account Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">Account Management</h1>
+        <p class="text-muted mb-0">Create, update, delete, and search staff or lecturer accounts.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#accountModal" onclick="openAccountCreate()"><i class="bi bi-plus-circle"></i> New Account</button>
+</div>
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card stat-card"><div class="card-body"><div class="text-muted">Total Accounts</div><div class="h3">@Model.Accounts.Count</div></div></div></div>
+    <div class="col-md-4"><div class="card stat-card"><div class="card-body"><div class="text-muted">Staff</div><div class="h3">@Model.Accounts.Count(a => a.AccountRole == 1)</div></div></div></div>
+    <div class="col-md-4"><div class="card stat-card"><div class="card-body"><div class="text-muted">Lecturers</div><div class="h3">@Model.Accounts.Count(a => a.AccountRole == 2)</div></div></div></div>
+</div>
+
+<div class="card soft-card">
+    <div class="card-body">
+        <form class="row g-2 mb-3" method="get">
+            <div class="col-md-10"><input class="form-control" asp-for="Search" placeholder="Search by name or email" /></div>
+            <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Search</button></div>
+        </form>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                @foreach (var account in Model.Accounts)
+                {
+                    <tr>
+                        <td>@account.AccountName</td>
+                        <td>@account.AccountEmail</td>
+                        <td><span class="badge text-bg-info">@(account.AccountRole == 1 ? "Staff" : "Lecturer")</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#accountModal"
+                                    onclick="openAccountEdit('@account.AccountId','@account.AccountName','@account.AccountEmail','@account.AccountPassword','@account.AccountRole')">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setDelete('@account.AccountId')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="accountModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" id="accountForm">
+            <div class="modal-header"><h5 class="modal-title" id="accountModalTitle">Account</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" asp-for="Input.AccountId" />
+                <div class="mb-3"><label asp-for="Input.AccountName" class="form-label"></label><input asp-for="Input.AccountName" class="form-control" /><span asp-validation-for="Input.AccountName" class="text-danger"></span></div>
+                <div class="mb-3"><label asp-for="Input.AccountEmail" class="form-label"></label><input asp-for="Input.AccountEmail" class="form-control" /><span asp-validation-for="Input.AccountEmail" class="text-danger"></span></div>
+                <div class="mb-3"><label asp-for="Input.AccountPassword" class="form-label"></label><input asp-for="Input.AccountPassword" class="form-control" /><span asp-validation-for="Input.AccountPassword" class="text-danger"></span></div>
+                <div class="mb-3"><label asp-for="Input.AccountRole" class="form-label"></label><select asp-for="Input.AccountRole" class="form-select"><option value="1">Staff</option><option value="2">Lecturer</option></select></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Save</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" asp-page-handler="Delete">
+            <div class="modal-header"><h5 class="modal-title">Confirm delete</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">Delete this account?</div>
+            <input type="hidden" name="id" id="deleteId" />
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger">Delete</button></div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function openAccountCreate() {
+            document.getElementById('accountModalTitle').innerText = 'Create Account';
+            document.getElementById('accountForm').action = '?handler=Create';
+            document.getElementById('Input_AccountId').value = '0';
+            ['AccountName','AccountEmail','AccountPassword'].forEach(x => document.getElementById('Input_' + x).value = '');
+            document.getElementById('Input_AccountRole').value = '1';
+        }
+        function openAccountEdit(id, name, email, password, role) {
+            document.getElementById('accountModalTitle').innerText = 'Update Account';
+            document.getElementById('accountForm').action = '?handler=Update';
+            document.getElementById('Input_AccountId').value = id;
+            document.getElementById('Input_AccountName').value = name;
+            document.getElementById('Input_AccountEmail').value = email;
+            document.getElementById('Input_AccountPassword').value = password;
+            document.getElementById('Input_AccountRole').value = role;
+        }
+        function setDelete(id) { document.getElementById('deleteId').value = id; }
+    </script>
+}
