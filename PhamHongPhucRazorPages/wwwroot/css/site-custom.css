@@ -1,0 +1,130 @@
+:root {
+    --surface: #ffffff;
+    --canvas: #f4f7fb;
+    --ink: #172033;
+    --muted: #6d7787;
+    --line: #dbe3ef;
+    --brand: #0f766e;
+}
+
+body {
+    background: var(--canvas);
+    color: var(--ink);
+}
+
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    flex: 0 0 260px;
+    background: #102a43;
+    color: #e6f0f8;
+    padding: 1.25rem 1rem;
+}
+
+.sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    color: #fff;
+    font-size: 1.25rem;
+    font-weight: 700;
+    text-decoration: none;
+    margin-bottom: 1.5rem;
+}
+
+.sidebar a:not(.brand) {
+    display: flex;
+    align-items: center;
+    gap: .7rem;
+    color: #c7d7e8;
+    text-decoration: none;
+    padding: .75rem .85rem;
+    border-radius: .5rem;
+    margin-bottom: .3rem;
+}
+
+.sidebar a:hover {
+    background: rgba(255, 255, 255, .09);
+    color: #fff;
+}
+
+.app-main {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-wrap {
+    flex: 1;
+    padding: 1.5rem;
+}
+
+.page-title {
+    font-weight: 750;
+    margin-bottom: .25rem;
+}
+
+.soft-card {
+    border: 1px solid var(--line);
+    border-radius: .75rem;
+    box-shadow: 0 8px 24px rgba(20, 40, 70, .06);
+}
+
+.stat-card {
+    border: 0;
+    border-left: 4px solid var(--brand);
+    border-radius: .75rem;
+}
+
+.login-bg {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f766e, #164e63 55%, #1f2937);
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+}
+
+.login-card {
+    width: min(440px, 100%);
+    border: 0;
+    border-radius: 1rem;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+}
+
+.news-card {
+    height: 100%;
+    border: 1px solid var(--line);
+    border-radius: .75rem;
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.news-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px rgba(20, 40, 70, .1);
+}
+
+.table thead th {
+    color: var(--muted);
+    font-size: .82rem;
+    text-transform: uppercase;
+}
+
+@media (max-width: 991.98px) {
+    .app-shell {
+        display: block;
+    }
+
+    .sidebar {
+        width: 100%;
+        min-height: auto;
+    }
+
+    .content-wrap {
+        padding: 1rem;
+    }
+}
