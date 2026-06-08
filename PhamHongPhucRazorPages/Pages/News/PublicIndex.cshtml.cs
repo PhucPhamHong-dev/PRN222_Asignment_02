@@ -3,13 +3,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Services.Interfaces;
 
-namespace PhamHongPhucRazorPages.Pages;
+namespace PhamHongPhucRazorPages.Pages.News;
 
-public class IndexModel : PageModel
+public class PublicIndexModel : PageModel
 {
     private readonly INewsArticleService _newsService;
 
-    public IndexModel(INewsArticleService newsService)
+    public PublicIndexModel(INewsArticleService newsService)
     {
         _newsService = newsService;
     }
