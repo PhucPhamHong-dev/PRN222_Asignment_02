@@ -1,0 +1,96 @@
+@page
+@model PhamHongPhucRazorPages.Pages.Staff.Categories.IndexModel
+@{
+    ViewData["Title"] = "Category Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">Category Management</h1>
+        <p class="text-muted mb-0">Manage active and inactive news categories.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#categoryModal" onclick="openCategoryCreate()"><i class="bi bi-plus-circle"></i> New Category</button>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Alert))
+{
+    <div class="alert alert-info">@Model.Alert</div>
+}
+
+<div class="card soft-card">
+    <div class="card-body">
+        <form class="row g-2 mb-3" method="get">
+            <div class="col-md-10"><input class="form-control" asp-for="Search" placeholder="Search categories" /></div>
+            <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Search</button></div>
+        </form>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Name</th><th>Description</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                @foreach (var category in Model.Categories)
+                {
+                    <tr>
+                        <td>@category.CategoryName</td>
+                        <td>@category.CategoryDescription</td>
+                        <td><span class="badge @(category.CategoryStatus ? "text-bg-success" : "text-bg-secondary")">@(category.CategoryStatus ? "Active" : "Inactive")</span></td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#categoryModal"
+                                    onclick="openCategoryEdit('@category.CategoryId','@category.CategoryName','@category.CategoryDescription','@category.CategoryStatus.ToString().ToLower()')"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setDelete('@category.CategoryId')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" id="categoryForm">
+            <div class="modal-header"><h5 class="modal-title" id="categoryTitle">Category</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" asp-for="Input.CategoryId" />
+                <div class="mb-3"><label asp-for="Input.CategoryName" class="form-label"></label><input asp-for="Input.CategoryName" class="form-control" /><span asp-validation-for="Input.CategoryName" class="text-danger"></span></div>
+                <div class="mb-3"><label asp-for="Input.CategoryDescription" class="form-label"></label><textarea asp-for="Input.CategoryDescription" class="form-control"></textarea></div>
+                <div class="form-check form-switch"><input asp-for="Input.CategoryStatus" class="form-check-input" /><label asp-for="Input.CategoryStatus" class="form-check-label">Active</label></div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Save</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" asp-page-handler="Delete">
+            <div class="modal-header"><h5 class="modal-title">Confirm delete</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">Delete this category? Categories used by news articles will be blocked.</div>
+            <input type="hidden" name="id" id="deleteId" />
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger">Delete</button></div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function openCategoryCreate() {
+            document.getElementById('categoryTitle').innerText = 'Create Category';
+            document.getElementById('categoryForm').action = '?handler=Create';
+            document.getElementById('Input_CategoryId').value = '0';
+            document.getElementById('Input_CategoryName').value = '';
+            document.getElementById('Input_CategoryDescription').value = '';
+            document.getElementById('Input_CategoryStatus').checked = true;
+        }
+        function openCategoryEdit(id, name, description, status) {
+            document.getElementById('categoryTitle').innerText = 'Update Category';
+            document.getElementById('categoryForm').action = '?handler=Update';
+            document.getElementById('Input_CategoryId').value = id;
+            document.getElementById('Input_CategoryName').value = name;
+            document.getElementById('Input_CategoryDescription').value = description;
+            document.getElementById('Input_CategoryStatus').checked = status === 'true';
+        }
+        function setDelete(id) { document.getElementById('deleteId').value = id; }
+    </script>
+}
