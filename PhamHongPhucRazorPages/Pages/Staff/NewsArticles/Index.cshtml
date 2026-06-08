@@ -1,0 +1,111 @@
+@page
+@model PhamHongPhucRazorPages.Pages.Staff.NewsArticles.IndexModel
+@using System.Text.Json
+@{
+    ViewData["Title"] = "News Article Management";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="page-title">News Article Management</h1>
+        <p class="text-muted mb-0">Manage articles, active status, categories, and tags with SignalR updates.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#newsModal" onclick="openNewsCreate()"><i class="bi bi-plus-circle"></i> New Article</button>
+</div>
+
+<div class="card soft-card">
+    <div class="card-body">
+        <form class="row g-2 mb-3" method="get">
+            <div class="col-md-10"><input class="form-control" asp-for="Search" placeholder="Search news or tags" /></div>
+            <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Search</button></div>
+        </form>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead><tr><th>Title</th><th>Category</th><th>Tags</th><th>Status</th><th>Created</th><th class="text-end">Actions</th></tr></thead>
+                <tbody>
+                @foreach (var article in Model.Articles)
+                {
+                    var tags = string.Join(", ", article.Tags.Select(t => t.TagName));
+                    <tr>
+                        <td><div class="fw-semibold">@article.NewsTitle</div><div class="small text-muted">@article.Headline</div></td>
+                        <td>@article.Category?.CategoryName</td>
+                        <td>@foreach (var tag in article.Tags) { <span class="badge text-bg-light border me-1">@tag.TagName</span> }</td>
+                        <td><span class="badge @(article.NewsStatus ? "text-bg-success" : "text-bg-secondary")">@(article.NewsStatus ? "Active" : "Inactive")</span></td>
+                        <td>@article.CreatedDate.ToString("dd/MM/yyyy")</td>
+                        <td class="text-end">
+                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newsModal"
+                                    onclick='openNewsEdit(@Html.Raw(JsonSerializer.Serialize(new { id = article.NewsArticleId, title = article.NewsTitle, headline = article.Headline, content = article.NewsContent, source = article.NewsSource, categoryId = article.CategoryId, status = article.NewsStatus, tags })))'>
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setDelete('@article.NewsArticleId')"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="newsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form class="modal-content" method="post" id="newsForm">
+            <div class="modal-header"><h5 class="modal-title" id="newsTitle">Article</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <input type="hidden" asp-for="Input.NewsArticleId" />
+                <div class="row g-3">
+                    <div class="col-md-8"><label asp-for="Input.NewsTitle" class="form-label"></label><input asp-for="Input.NewsTitle" class="form-control" /><span asp-validation-for="Input.NewsTitle" class="text-danger"></span></div>
+                    <div class="col-md-4"><label asp-for="Input.CategoryId" class="form-label"></label><select asp-for="Input.CategoryId" class="form-select" asp-items="@(new SelectList(Model.Categories, "CategoryId", "CategoryName"))"></select></div>
+                    <div class="col-12"><label asp-for="Input.Headline" class="form-label"></label><input asp-for="Input.Headline" class="form-control" /><span asp-validation-for="Input.Headline" class="text-danger"></span></div>
+                    <div class="col-12"><label asp-for="Input.NewsContent" class="form-label"></label><textarea asp-for="Input.NewsContent" class="form-control" rows="5"></textarea><span asp-validation-for="Input.NewsContent" class="text-danger"></span></div>
+                    <div class="col-md-6"><label asp-for="Input.NewsSource" class="form-label"></label><input asp-for="Input.NewsSource" class="form-control" /></div>
+                    <div class="col-md-6"><label asp-for="TagList" class="form-label">Tags</label><input asp-for="TagList" class="form-control" placeholder="training, campus, event" /></div>
+                    <div class="col-12"><div class="form-check form-switch"><input asp-for="Input.NewsStatus" class="form-check-input" /><label class="form-check-label" asp-for="Input.NewsStatus">Active</label></div></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary">Save</button></div>
+        </form>
+    </div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form class="modal-content" method="post" asp-page-handler="Delete">
+            <div class="modal-header"><h5 class="modal-title">Confirm delete</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">Delete this news article?</div>
+            <input type="hidden" name="id" id="deleteId" />
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger">Delete</button></div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
+    <script>
+        const connection = new signalR.HubConnectionBuilder().withUrl('/newsHub').build();
+        connection.on('ReceiveNewsUpdate', () => window.location.reload());
+        connection.start();
+
+        function openNewsCreate() {
+            document.getElementById('newsTitle').innerText = 'Create Article';
+            document.getElementById('newsForm').action = '?handler=Create';
+            ['NewsArticleId','NewsTitle','Headline','NewsContent','NewsSource'].forEach(x => document.getElementById('Input_' + x).value = '');
+            document.getElementById('TagList').value = '';
+            document.getElementById('Input_NewsStatus').checked = true;
+        }
+        function openNewsEdit(article) {
+            document.getElementById('newsTitle').innerText = 'Update Article';
+            document.getElementById('newsForm').action = '?handler=Update';
+            document.getElementById('Input_NewsArticleId').value = article.id;
+            document.getElementById('Input_NewsTitle').value = article.title;
+            document.getElementById('Input_Headline').value = article.headline;
+            document.getElementById('Input_NewsContent').value = article.content;
+            document.getElementById('Input_NewsSource').value = article.source || '';
+            document.getElementById('Input_CategoryId').value = article.categoryId;
+            document.getElementById('Input_NewsStatus').checked = article.status;
+            document.getElementById('TagList').value = article.tags || '';
+        }
+        function setDelete(id) { document.getElementById('deleteId').value = id; }
+    </script>
+}
