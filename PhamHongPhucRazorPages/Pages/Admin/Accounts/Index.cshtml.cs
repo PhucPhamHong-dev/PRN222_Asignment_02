@@ -30,6 +30,12 @@ public class IndexModel : PageModel
         Accounts = await _accountService.SearchAsync(Search);
     }
 
+    public async Task<PartialViewResult> OnGetSearchAsync(string? keyword)
+    {
+        var accounts = await _accountService.SearchAsync(keyword);
+        return Partial("_AccountTablePartial", accounts);
+    }
+
     public async Task<IActionResult> OnPostCreateAsync()
     {
         ModelState.Remove("Input.AccountId");

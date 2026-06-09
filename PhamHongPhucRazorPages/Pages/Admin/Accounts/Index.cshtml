@@ -26,30 +26,12 @@
 <div class="card soft-card">
     <div class="card-body">
         <form class="row g-2 mb-3" method="get">
-            <div class="col-md-10"><input class="form-control" asp-for="Search" placeholder="Search by name or email" /></div>
+            <div class="col-md-10"><input class="form-control" asp-for="Search" id="accountSearchInput" placeholder="Search by name, email, role..." autocomplete="off" /></div>
             <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Search</button></div>
         </form>
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead><tr><th>Name</th><th>Email</th><th>Role</th><th class="text-end">Actions</th></tr></thead>
-                <tbody>
-                @foreach (var account in Model.Accounts)
-                {
-                    <tr>
-                        <td>@account.AccountName</td>
-                        <td>@account.AccountEmail</td>
-                        <td><span class="badge text-bg-info">@(account.AccountRole == 1 ? "Staff" : "Lecturer")</span></td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#accountModal"
-                                    onclick="openAccountEdit('@account.AccountId','@account.AccountName','@account.AccountEmail','@account.AccountPassword','@account.AccountRole')">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setDelete('@account.AccountId')"><i class="bi bi-trash"></i></button>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+        <div class="small text-muted mb-2 d-none" id="accountSearchStatus">Searching...</div>
+        <div id="accountTableContainer">
+            <partial name="_AccountTablePartial" model="Model.Accounts" />
         </div>
     </div>
 </div>
@@ -84,6 +66,36 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
+        const accountSearchInput = document.getElementById('accountSearchInput');
+        const accountTableContainer = document.getElementById('accountTableContainer');
+        const accountSearchStatus = document.getElementById('accountSearchStatus');
+        let accountSearchTimer;
+
+        accountSearchInput.addEventListener('input', () => {
+            clearTimeout(accountSearchTimer);
+            accountSearchTimer = setTimeout(refreshAccountTable, 300);
+        });
+
+        async function refreshAccountTable() {
+            accountSearchStatus.classList.remove('d-none');
+            try {
+                const keyword = accountSearchInput.value || '';
+                const response = await fetch(`?handler=Search&keyword=${encodeURIComponent(keyword)}`);
+                if (!response.ok) {
+                    throw new Error();
+                }
+                accountTableContainer.innerHTML = await response.text();
+            } catch {
+                accountSearchStatus.innerText = 'Unable to update account list.';
+                setTimeout(() => {
+                    accountSearchStatus.innerText = 'Searching...';
+                    accountSearchStatus.classList.add('d-none');
+                }, 2500);
+                return;
+            }
+            accountSearchStatus.classList.add('d-none');
+        }
+
         function openAccountCreate() {
             document.getElementById('accountModalTitle').innerText = 'Create Account';
             document.getElementById('accountForm').action = '?handler=Create';

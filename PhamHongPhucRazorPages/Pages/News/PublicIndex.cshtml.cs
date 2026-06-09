@@ -23,4 +23,10 @@ public class PublicIndexModel : PageModel
     {
         Articles = await _newsService.SearchAsync(Search, activeOnly: true);
     }
+
+    public async Task<PartialViewResult> OnGetSearchAsync(string? keyword)
+    {
+        var articles = await _newsService.SearchAsync(keyword, activeOnly: true);
+        return Partial("_PublicNewsCardsPartial", articles);
+    }
 }

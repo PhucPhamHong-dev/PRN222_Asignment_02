@@ -19,7 +19,17 @@ public class AccountDao
         var query = context.SystemAccounts.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(keyword))
         {
-            query = query.Where(account => account.AccountName.Contains(keyword) || account.AccountEmail.Contains(keyword));
+            keyword = keyword.Trim();
+            var roleKeyword = keyword.Equals("staff", StringComparison.OrdinalIgnoreCase)
+                ? AppRoles.Staff
+                : keyword.Equals("lecturer", StringComparison.OrdinalIgnoreCase)
+                    ? AppRoles.Lecturer
+                    : (int?)null;
+
+            query = query.Where(account =>
+                account.AccountName.Contains(keyword) ||
+                account.AccountEmail.Contains(keyword) ||
+                (roleKeyword.HasValue && account.AccountRole == roleKeyword.Value));
         }
 
         return await query.OrderBy(account => account.AccountName).ToListAsync();

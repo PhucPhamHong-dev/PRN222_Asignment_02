@@ -1,6 +1,5 @@
 @page
 @model PhamHongPhucRazorPages.Pages.Staff.NewsArticles.IndexModel
-@using System.Text.Json
 @{
     ViewData["Title"] = "News Article Management";
 }
@@ -16,33 +15,12 @@
 <div class="card soft-card">
     <div class="card-body">
         <form class="row g-2 mb-3" method="get">
-            <div class="col-md-10"><input class="form-control" asp-for="Search" placeholder="Search news or tags" /></div>
+            <div class="col-md-10"><input class="form-control" asp-for="Search" id="newsSearchInput" placeholder="Search by title, headline, category, tag..." autocomplete="off" /></div>
             <div class="col-md-2"><button class="btn btn-outline-primary w-100"><i class="bi bi-search"></i> Search</button></div>
         </form>
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead><tr><th>Title</th><th>Category</th><th>Tags</th><th>Status</th><th>Created</th><th class="text-end">Actions</th></tr></thead>
-                <tbody>
-                @foreach (var article in Model.Articles)
-                {
-                    var tags = string.Join(", ", article.Tags.Select(t => t.TagName));
-                    <tr>
-                        <td><div class="fw-semibold">@article.NewsTitle</div><div class="small text-muted">@article.Headline</div></td>
-                        <td>@article.Category?.CategoryName</td>
-                        <td>@foreach (var tag in article.Tags) { <span class="badge text-bg-light border me-1">@tag.TagName</span> }</td>
-                        <td><span class="badge @(article.NewsStatus ? "text-bg-success" : "text-bg-secondary")">@(article.NewsStatus ? "Active" : "Inactive")</span></td>
-                        <td>@article.CreatedDate.ToString("dd/MM/yyyy")</td>
-                        <td class="text-end">
-                            <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newsModal"
-                                    onclick='openNewsEdit(@Html.Raw(JsonSerializer.Serialize(new { id = article.NewsArticleId, title = article.NewsTitle, headline = article.Headline, content = article.NewsContent, source = article.NewsSource, categoryId = article.CategoryId, status = article.NewsStatus, tags })))'>
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setDelete('@article.NewsArticleId')"><i class="bi bi-trash"></i></button>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
+        <div class="small text-muted mb-2 d-none" id="newsSearchStatus">Searching...</div>
+        <div id="newsArticleTableContainer">
+            <partial name="_NewsArticleTablePartial" model="Model.Articles" />
         </div>
     </div>
 </div>
@@ -84,8 +62,44 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/8.0.7/signalr.min.js"></script>
     <script>
         const connection = new signalR.HubConnectionBuilder().withUrl('/newsHub').build();
-        connection.on('ReceiveNewsUpdate', () => window.location.reload());
+        connection.on('ReceiveNewsUpdate', () => refreshNewsTable());
         connection.start();
+
+        const searchInput = document.getElementById('newsSearchInput');
+        const tableContainer = document.getElementById('newsArticleTableContainer');
+        const searchStatus = document.getElementById('newsSearchStatus');
+        let searchTimer;
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => refreshNewsTable(), 300);
+        });
+
+        async function refreshNewsTable() {
+            const keyword = searchInput.value || '';
+            searchStatus.classList.remove('d-none');
+
+            try {
+                const response = await fetch(`?handler=Search&keyword=${encodeURIComponent(keyword)}`, {
+                    headers: { 'X-Requested-With': 'fetch' }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Search request failed.');
+                }
+
+                tableContainer.innerHTML = await response.text();
+            } catch {
+                searchStatus.innerText = 'Unable to update news list.';
+                setTimeout(() => {
+                    searchStatus.innerText = 'Searching...';
+                    searchStatus.classList.add('d-none');
+                }, 2500);
+                return;
+            }
+
+            searchStatus.classList.add('d-none');
+        }
 
         function openNewsCreate() {
             document.getElementById('newsTitle').innerText = 'Create Article';

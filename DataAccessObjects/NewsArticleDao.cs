@@ -30,10 +30,19 @@ public class NewsArticleDao
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
+            keyword = keyword.Trim();
+            var statusFilter = keyword.Equals("active", StringComparison.OrdinalIgnoreCase)
+                ? true
+                : keyword.Equals("inactive", StringComparison.OrdinalIgnoreCase)
+                    ? false
+                    : (bool?)null;
+
             query = query.Where(article => article.NewsTitle.Contains(keyword) ||
                                            article.Headline.Contains(keyword) ||
                                            article.NewsContent.Contains(keyword) ||
-                                           article.Tags.Any(tag => tag.TagName.Contains(keyword)));
+                                           (article.Category != null && article.Category.CategoryName.Contains(keyword)) ||
+                                           article.Tags.Any(tag => tag.TagName.Contains(keyword)) ||
+                                           (statusFilter.HasValue && article.NewsStatus == statusFilter.Value));
         }
 
         return await query.OrderByDescending(article => article.CreatedDate).ToListAsync();

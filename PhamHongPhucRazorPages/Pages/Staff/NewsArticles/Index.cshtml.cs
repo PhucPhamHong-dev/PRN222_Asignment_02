@@ -41,6 +41,12 @@ public class IndexModel : PageModel
         Categories = await _categoryService.GetActiveAsync();
     }
 
+    public async Task<PartialViewResult> OnGetSearchAsync(string? keyword)
+    {
+        var articles = await _newsService.SearchAsync(keyword);
+        return Partial("_NewsArticleTablePartial", articles);
+    }
+
     public async Task<IActionResult> OnPostCreateAsync()
     {
         CleanNewsModelState();

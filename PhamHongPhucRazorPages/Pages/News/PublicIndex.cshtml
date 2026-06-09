@@ -11,24 +11,46 @@
             <p class="text-muted mb-0">Latest active news for public readers.</p>
         </div>
         <form class="d-flex gap-2" method="get">
-            <input class="form-control" asp-for="Search" placeholder="Search news..." />
+            <input class="form-control" asp-for="Search" id="publicNewsSearchInput" placeholder="Search by title, headline, category, tag..." autocomplete="off" />
             <button class="btn btn-primary"><i class="bi bi-search"></i></button>
         </form>
     </div>
-    <div class="row g-4">
-        @foreach (var article in Model.Articles)
-        {
-            <div class="col-md-6 col-xl-4">
-                <article class="card news-card">
-                    <div class="card-body">
-                        <span class="badge text-bg-success mb-3">@article.Category?.CategoryName</span>
-                        <h5>@article.NewsTitle</h5>
-                        <p class="text-muted">@article.Headline</p>
-                        <p>@article.NewsContent</p>
-                        <div class="small text-muted">@article.CreatedDate.ToString("dd/MM/yyyy") - @article.CreatedBy?.AccountName</div>
-                    </div>
-                </article>
-            </div>
-        }
+    <div class="small text-muted mb-2 d-none" id="publicNewsSearchStatus">Searching...</div>
+    <div id="publicNewsContainer">
+        <partial name="_PublicNewsCardsPartial" model="Model.Articles" />
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const publicNewsSearchInput = document.getElementById('publicNewsSearchInput');
+        const publicNewsContainer = document.getElementById('publicNewsContainer');
+        const publicNewsSearchStatus = document.getElementById('publicNewsSearchStatus');
+        let publicNewsSearchTimer;
+
+        publicNewsSearchInput.addEventListener('input', () => {
+            clearTimeout(publicNewsSearchTimer);
+            publicNewsSearchTimer = setTimeout(refreshPublicNews, 300);
+        });
+
+        async function refreshPublicNews() {
+            publicNewsSearchStatus.classList.remove('d-none');
+            try {
+                const keyword = publicNewsSearchInput.value || '';
+                const response = await fetch(`?handler=Search&keyword=${encodeURIComponent(keyword)}`);
+                if (!response.ok) {
+                    throw new Error();
+                }
+                publicNewsContainer.innerHTML = await response.text();
+            } catch {
+                publicNewsSearchStatus.innerText = 'Unable to update news list.';
+                setTimeout(() => {
+                    publicNewsSearchStatus.innerText = 'Searching...';
+                    publicNewsSearchStatus.classList.add('d-none');
+                }, 2500);
+                return;
+            }
+            publicNewsSearchStatus.classList.add('d-none');
+        }
+    </script>
+}

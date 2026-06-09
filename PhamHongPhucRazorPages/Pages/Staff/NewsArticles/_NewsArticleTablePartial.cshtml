@@ -1,0 +1,57 @@
+@model IReadOnlyList<BusinessObjects.Models.NewsArticle>
+@using System.Text.Json
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Category</th>
+                <th>Tags</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var article in Model)
+        {
+            var tags = string.Join(", ", article.Tags.Select(t => t.TagName));
+            <tr>
+                <td>
+                    <div class="fw-semibold">@article.NewsTitle</div>
+                    <div class="small text-muted">@article.Headline</div>
+                </td>
+                <td>@article.Category?.CategoryName</td>
+                <td>
+                    @foreach (var tag in article.Tags)
+                    {
+                        <span class="badge text-bg-light border me-1">@tag.TagName</span>
+                    }
+                </td>
+                <td>
+                    <span class="badge @(article.NewsStatus ? "text-bg-success" : "text-bg-secondary")">
+                        @(article.NewsStatus ? "Active" : "Inactive")
+                    </span>
+                </td>
+                <td>@article.CreatedDate.ToString("dd/MM/yyyy")</td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#newsModal"
+                            onclick='openNewsEdit(@Html.Raw(JsonSerializer.Serialize(new { id = article.NewsArticleId, title = article.NewsTitle, headline = article.Headline, content = article.NewsContent, source = article.NewsSource, categoryId = article.CategoryId, status = article.NewsStatus, tags })))'>
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setDelete('@article.NewsArticleId')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="6" class="text-center text-muted py-4">No news articles found.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>

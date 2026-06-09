@@ -1,0 +1,40 @@
+@model IReadOnlyList<BusinessObjects.Models.SystemAccount>
+@using System.Text.Encodings.Web
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th class="text-end">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var account in Model)
+        {
+            <tr>
+                <td>@account.AccountName</td>
+                <td>@account.AccountEmail</td>
+                <td><span class="badge text-bg-info">@(account.AccountRole == 1 ? "Staff" : "Lecturer")</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#accountModal"
+                            onclick="openAccountEdit('@account.AccountId','@JavaScriptEncoder.Default.Encode(account.AccountName)','@JavaScriptEncoder.Default.Encode(account.AccountEmail)','@JavaScriptEncoder.Default.Encode(account.AccountPassword)','@account.AccountRole')">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal" onclick="setDelete('@account.AccountId')">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        }
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="4" class="text-center text-muted py-4">No accounts found.</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
